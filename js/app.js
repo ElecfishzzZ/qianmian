@@ -209,7 +209,7 @@ const App = {
 
   _renderQuestion(q) {
     const currentScore = this.state.answers[q.id] || 0;
-    const labels = ["非常赞同", "比较赞同", "中立", "不太赞同", "非常不赞同"];
+    const labels = ["这就是我", "基本是我", "说不准", "不太像我", "完全不是我"];
 
     let optionsHTML = "";
     for (let i = 1; i <= 5; i++) {
@@ -329,17 +329,24 @@ const App = {
     const now = new Date();
     const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
-    let report = `维度分析报告\n\n测试时间: ${timeStr}\n\n━━━━━━━━━━━━━━━━━━\n\n`;
-    report += `此为导入题库，不支持人格类型匹配。以下是各维度的得分概况：\n\n`;
+    let report = `维度分析报告\n\n测试时间: ${timeStr}\n\n此为导入题库，不支持人格类型匹配。以下是你在各维度的表现概况：\n\n`;
 
     for (const [dim, score] of Object.entries(scores)) {
       const name = DIMENSION_NAMES[dim] || dim;
-      const level = score >= 4 ? "较高" : score <= 2 ? "较低" : "中等";
-      const bar = "█".repeat(Math.round(score)) + "░".repeat(5 - Math.round(score));
-      report += `${name}: ${bar} ${score.toFixed(1)}/5 (${level})\n`;
+      if (score >= 4) {
+        report += `${name}：倾向明显\n`;
+      } else if (score >= 3.2) {
+        report += `${name}：中等偏上\n`;
+      } else if (score <= 2) {
+        report += `${name}：倾向相反\n`;
+      } else if (score <= 2.8) {
+        report += `${name}：中等偏下\n`;
+      } else {
+        report += `${name}：比较平衡\n`;
+      }
     }
 
-    report += `\n━━━━━━━━━━━━━━━━━━\n千面 · 了解你的每一面`;
+    report += `\n千面 · 了解你的每一面`;
     return report;
   },
 
@@ -435,7 +442,7 @@ const App = {
 
     this.showToast("正在调用 AI 生成深度画像...", "success");
 
-    const result = await AI.generateProfile(config, profile.dimensionScores, {});
+    const result = await AI.generateProfile(config, profile.dimensionScores);
 
     if (result.success) {
       profile.content = result.report;

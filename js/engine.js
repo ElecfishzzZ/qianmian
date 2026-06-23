@@ -7,7 +7,7 @@ const Engine = {
   calcDimensionScores(answers) {
     const dims = {};
     for (const q of QUESTIONNAIRE.questions) {
-      if (answers[q.id] == null) continue; // 跳过未答题
+      if (answers[q.id] == null) continue;
       if (!dims[q.dimension]) dims[q.dimension] = { sum: 0, count: 0 };
       dims[q.dimension].sum += answers[q.id];
       dims[q.dimension].count += 1;
@@ -50,34 +50,39 @@ const Engine = {
     };
   },
 
-  // 生成画像文本（离线模板 + 维度解读拼接）
-  generateProfile(matchResult, scores) {
-    const { primary, secondary } = matchResult;
-    const simPercent = (primary.similarity * 100).toFixed(1);
-
-    // 维度解读
-    const dimLines = VECTOR_DIMENSIONS.map(dim => {
+  // 将维度得分转为自然语言描述（供 AI 使用）
+  scoresToDescription(scores) {
+    const parts = [];
+    for (const dim of VECTOR_DIMENSIONS) {
       const score = scores[dim] || 3;
       const name = DIMENSION_NAMES[dim];
-      const level = score >= 4 ? "较高" : score <= 2 ? "较低" : "中等";
-      return `${name}: ${level} (${score.toFixed(1)}/5)`;
-    }).join("\n");
+      if (score >= 4.2) {
+        parts.push(`在${name}方面，你表现出明显的倾向`);
+      } else if (score >= 3.5) {
+        parts.push(`在${name}方面，你处于中等偏上的水平`);
+      } else if (score <= 1.8) {
+        parts.push(`在${name}方面，你表现出明显的反向倾向`);
+      } else if (score <= 2.5) {
+        parts.push(`在${name}方面，你处于中等偏下的水平`);
+      } else {
+        parts.push(`在${name}方面，你的态度比较平衡`);
+      }
+    }
+    return parts.join("；");
+  },
 
-    // 组装报告
+  // 生成画像文本（仅人格名 + 模板正文，不展示评分）
+  generateProfile(matchResult, scores) {
+    const { primary, secondary } = matchResult;
+
     const now = new Date();
     const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
-    let report = `【${primary.name}】相似度: ${simPercent}%\n`;
+    let report = primary.template;
     if (secondary && secondary.similarity > 0.7) {
-      report += `第二匹配: ${secondary.name} (${(secondary.similarity * 100).toFixed(1)}%)\n`;
+      report += `\n\n此外，你的画像中也包含一些「${secondary.name}」的影子。`;
     }
-    report += `测试时间: ${timeStr}\n\n`;
-    report += `━━━━━━━━━━━━━━━━━━\n\n`;
-    report += primary.template + `\n\n`;
-    report += `━━━━━━━━━━━━━━━━━━\n\n`;
-    report += `12维度分析:\n${dimLines}\n\n`;
-    report += `━━━━━━━━━━━━━━━━━━\n`;
-    report += `千面 · 了解你的每一面`;
+    report += `\n\n测试时间: ${timeStr}\n千面 · 了解你的每一面`;
 
     return {
       personalityType: primary.name,
@@ -91,19 +96,12 @@ const Engine = {
     };
   },
 
-  // 生成通用画像（兜底——没有匹配到模板时）
+  // 通用兜底画像
   generateFallbackProfile(scores) {
     const now = new Date();
     const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
-    const dimLines = VECTOR_DIMENSIONS.map(dim => {
-      const score = scores[dim] || 3;
-      const name = DIMENSION_NAMES[dim];
-      const level = score >= 4 ? "较高" : score <= 2 ? "较低" : "中等";
-      return `${name}: ${level} (${score.toFixed(1)}/5)`;
-    }).join("\n");
-
-    const report = `你的爱情人格画像\n\n测试时间: ${timeStr}\n\n━━━━━━━━━━━━━━━━━━\n\n你的各维度得分较为均衡，未呈现典型的极端人格类型。以下是你12个爱情维度的详细分析，帮助你更深入地了解自己的爱情观。\n\n${dimLines}\n\n━━━━━━━━━━━━━━━━━━\n千面 · 了解你的每一面`;
+    const report = `你的爱情人格画像\n\n你在各个爱情维度上的表现比较均衡，没有呈现极端的倾向。这让你在关系中能够灵活应对不同的情境，但也意味着你可能还在探索自己真正想要的是什么。这种平衡本身就是一种难得的状态——不急不躁，从容地走在了解自己的路上。\n\n测试时间: ${timeStr}\n千面 · 了解你的每一面`;
 
     return {
       personalityType: "独特人格",

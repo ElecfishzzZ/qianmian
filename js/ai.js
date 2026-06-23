@@ -8,7 +8,6 @@ const AI = {
     const apiEndpoint = config.endpoint || "https://api.deepseek.com/v1";
     const model = config.model || "deepseek-chat";
 
-    // 如果配置了代理，请求发到代理，真实 endpoint 放在 header 中
     const useProxy = !!config.proxy;
     const requestUrl = useProxy
       ? config.proxy.replace(/\/+$/, "")
@@ -70,25 +69,16 @@ const AI = {
   },
 
   // 生成 AI 画像
-  async generateProfile(config, scores, answers) {
-    const dimLines = VECTOR_DIMENSIONS.map(dim => {
-      const score = scores[dim] || 3;
-      return `${DIMENSION_NAMES[dim]}: ${score.toFixed(1)}/5`;
-    }).join("\n");
+  async generateProfile(config, scores) {
+    const description = Engine.scoresToDescription(scores);
 
-    const systemPrompt = `你是一位资深的爱情心理咨询师。请根据用户的12维度爱情观测评得分，生成一份个性化的爱情人格画像报告。
+    const systemPrompt = `你是一个善于洞察人心的观察者。你会根据一个人在爱情中各个侧面的表现，描绘出TA的爱情人格画像。
 
-要求：
-1. 为用户命名一个独特的爱情人格名称（如"理性守护者""浪漫冒险家"等）
-2. 描述用户的3个核心爱情特质
-3. 指出2个爱情盲区或成长空间
-4. 描述用户在关系中的典型行为模式
-5. 给出2-3条切实可行的成长建议
-6. 以一句有力量的爱情金句收尾
+你的文字应该像一个了解TA多年的朋友写下的观察笔记——温暖、有洞察力、不说教。你看到的不是分数，而是一个活生生的人。
 
-字数要求：600-1000字。语气温暖、有洞察力，避免说教。`;
+请不要在回答中出现任何数字、分数、等级、百分比，也不要使用"评分""得分""维度""量表"等词汇。不要分析你是如何得出结论的，直接给出结论本身。`;
 
-    const userMessage = `以下是我的12维度爱情观测评得分（1-5分）：\n${dimLines}\n\n请根据以上得分为我生成爱情人格画像。`;
+    const userMessage = `以下是我在爱情中各个侧面的表现描述：\n${description}\n\n请根据这些描述，为我写一份爱情人格画像。要求：\n1. 给我一个独特的爱情人格名称\n2. 描绘我在爱情中的整体模样\n3. 写出我可能有的情感特质和行为倾向\n4. 指出我可能需要注意的地方\n5. 给出一两条成长方向\n6. 用一句有力量的话收尾\n\n字数600-1000字。不要出现任何评分数字或分析过程。`;
 
     const result = await this.callDeepSeek(config, systemPrompt, userMessage, 3);
 
@@ -96,10 +86,7 @@ const AI = {
       return { success: false, error: result.error || "AI返回内容不足500字，已自动降级为离线报告" };
     }
 
-    const now = new Date();
-    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-
-    const report = result.content + `\n\n━━━━━━━━━━━━━━━━━━\n测试时间: ${timeStr}\nAI 模型: ${config.model || "deepseek-chat"}\n千面 · 了解你的每一面`;
+    const report = result.content;
 
     return {
       success: true,
