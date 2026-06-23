@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="千面 — 探索你的爱情人格画像。78道陈述题，12个维度，10种爱情人格类型。">
+  <meta name="theme-color" content="#E07B4C">
+  <title>千面 · 爱情人格画像</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- 顶部导航 -->
+    <nav class="navbar">
+      <button class="navbar-btn navbar-back" id="btn-back" style="visibility:hidden;">← 返回</button>
+      <span class="navbar-title">千面</span>
+      <button class="navbar-btn" id="btn-settings" title="设置">⚙️</button>
+    </nav>
+
+    <!-- 首页 -->
+    <div class="page active" id="page-home">
+      <div id="home-content"></div>
+    </div>
+
+    <!-- 答题页 -->
+    <div class="page" id="page-quiz">
+      <div id="quiz-content"></div>
+    </div>
+
+    <!-- 结果页 -->
+    <div class="page" id="page-result">
+      <div id="result-content"></div>
+    </div>
+
+    <!-- 历史记录页 -->
+    <div class="page" id="page-history">
+      <div id="history-content"></div>
+    </div>
+  </div>
+
+  <!-- 隐私弹窗 -->
+  <div class="modal-overlay" id="modal-privacy">
+    <div class="modal" id="privacy-content"></div>
+  </div>
+
+  <!-- 设置弹窗 -->
+  <div class="modal-overlay" id="modal-settings">
+    <div class="modal" id="settings-content"></div>
+  </div>
+
+  <!-- 导入弹窗 -->
+  <div class="modal-overlay" id="modal-import">
+    <div class="modal" id="import-content"></div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- JS 依赖（按顺序加载） -->
+  <script src="js/questions.js"></script>
+  <script src="js/templates.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/import.js"></script>
+  <script src="js/share.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- html2canvas CDN（长图分享） -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</body>
+</html>
